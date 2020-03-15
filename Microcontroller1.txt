@@ -1,0 +1,129 @@
+sbit LCD_RS at RB0_bit;
+sbit LCD_EN at RB1_bit;
+sbit LCD_D4 at RB2_bit;
+sbit LCD_D5 at RB3_bit;
+sbit LCD_D6 at RB4_bit;
+sbit LCD_D7 at RB5_bit;
+sbitLCD_RS_Direction at TRISB0_bit;
+sbitLCD_EN_Direction at TRISB1_bit;
+sbit LCD_D4_Direction at TRISB2_bit;
+sbit LCD_D5_Direction at TRISB3_bit;
+sbit LCD_D6_Direction at TRISB4_bit;
+sbit LCD_D7_Direction at TRISB5_bit;
+unsignedintadc;
+unsignedint count;
+unsignedintchk;
+unsignedintcp=0;
+unsignedintchk_sp;
+unsignedintadc_sp;
+unsignedintadcold;
+unsignedintchkold;
+char txt[7];
+void main()
+{
+ADCON1=0x80;
+TRISA=0xFF;
+TRISB.F6=1;
+TRISB.F7=1;
+TRISC=0x00;
+TRISD=0xFF;
+PORTC=0x00;
+count=0;
+Lcd_Init(); // Initialize LCD
+Lcd_Cmd(_LCD_CLEAR); // Clear display
+Lcd_Cmd(_LCD_CURSOR_OFF); // Cursor off
+Lcd_Out(1,1,"LIMIT: ");
+Lcd_Out(2,1,"CURRENT: ");
+do
+{
+if(PORTB.F6==0)
+{
+adc = ADC_Read(1);
+chk=614;
+if(PORTD==0x09)
+chk=204;
+if(PORTD==0x06)
+chk=153;
+if(PORTD==0x0B)
+chk=230;
+if(PORTD==0x0D)
+chk=256;
+if(PORTD==0x0E)
+chk=26;
+chk_sp=chk*.19531;
+++chk_sp;
+adc_sp=adc*.19531;
+++adc_sp;
+if(chkold!=chk)
+{
+IntToStr(chk_sp,txt);
+Lcd_Out(1,9,txt);
+}
+if(adcold!=adc)
+{
+IntToSTr(adc_sp,txt);
+Lcd_Out(2,9,txt);
+}
+adcold=adc;
+chkold=chk;
+if(adc>chk)
+{
+if(cp==0)
+{
+PORTC=0x03;
+cp=1;
+}
+}
+if(adc<chk)
+{
+cp=0;
+PORTC=0x00;
+}
+}
+else
+{
+adc = ADC_Read(1);
+chk=614;
+if(PORTD==0x05)
+chk=26;
+chk_sp=chk*.19531;
+++chk_sp;
+adc_sp=adc*.19531;
+++adc_sp;
+if(chkold!=chk)
+{
+IntToStr(chk_sp,txt);
+Lcd_Out(1,9,txt);
+}
+if(adcold!=adc)
+{
+IntToSTr(adc_sp,txt);
+Lcd_Out(2,9,txt);
+}
+adcold=adc;
+chkold=chk;
+if(adc>chk)
+{
+if(cp==0)
+{
+PORTC=0x07;
+Delay_ms(3000);
+PORTC=0x03;
+cp=1;
+}
+}
+if(adc<chk)
+{
+if(cp!=0)
+{
+PORTC.F3=1;
+Delay_ms(3000);
+PORTC=0x00;
+}
+cp=0;
+PORTC=0x00;
+}
+}
+}
+while(1);
+}
